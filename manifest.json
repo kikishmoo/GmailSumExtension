@@ -4,9 +4,10 @@
   "version": "0.1.0",
   "description": "Chrome extension scaffold for Gmail summarization workflows.",
   "permissions": ["storage", "activeTab", "scripting"],
-  "host_permissions": ["https://mail.google.com/*"],
+  "host_permissions": ["https://mail.google.com/*", "https://api.openai.com/*"],
   "background": {
-    "service_worker": "src/background.js"
+    "service_worker": "src/background.js",
+    "type": "module"
   },
   "content_scripts": [
     {
