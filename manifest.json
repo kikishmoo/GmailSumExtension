@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Gmail Summary Extension",
+  "version": "0.1.0",
+  "description": "Chrome extension scaffold for Gmail summarization workflows.",
+  "permissions": ["storage", "activeTab", "scripting"],
+  "host_permissions": ["https://mail.google.com/*"],
+  "background": {
+    "service_worker": "src/background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://mail.google.com/*"],
+      "js": ["src/content/gmail.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "src/popup/index.html",
+    "default_title": "Gmail Summary"
+  }
+}
