@@ -27,8 +27,17 @@
   console.log('Gmail Summary content script loaded on:', window.location.href);
 })();
 
+const CATEGORY_ALIASES = {
+  primary: 'other',
+  work: 'business',
+};
+
+function normalizeSelectedCategories(categories) {
+  return (Array.isArray(categories) ? categories : []).map((category) => CATEGORY_ALIASES[category] || category);
+}
+
 function collectUnreadThreads({ categories, maxThreads }) {
-  const selectedCategories = Array.isArray(categories) ? categories : [];
+  const selectedCategories = normalizeSelectedCategories(categories);
   const unreadRows = Array.from(document.querySelectorAll('tr.zA.zE'));
   const threads = [];
 

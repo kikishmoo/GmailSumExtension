@@ -6,6 +6,11 @@ const DEFAULT_PREFERENCES = {
 
 const STORAGE_KEY = 'popupPreferences';
 const SUMMARY_LENGTHS = new Set(['short', 'medium', 'long']);
+
+const CATEGORY_ALIASES = {
+  primary: 'other',
+  work: 'business',
+};
 const CATEGORY_LABELS = {
   business: 'Business',
   'side-hustles': 'Side hustles',
@@ -214,7 +219,9 @@ function applyPreferencesToUI(prefs) {
 function sanitizePreferences(rawPrefs) {
   const availableCategories = Array.from(categoriesSelect.options).map((option) => option.value);
   const categories = Array.isArray(rawPrefs?.categories)
-    ? rawPrefs.categories.filter((category) => availableCategories.includes(category))
+    ? rawPrefs.categories
+        .map((category) => CATEGORY_ALIASES[category] || category)
+        .filter((category) => availableCategories.includes(category))
     : [];
   const summaryLength = SUMMARY_LENGTHS.has(rawPrefs?.summaryLength)
     ? rawPrefs.summaryLength

@@ -47,7 +47,7 @@ function buildSummary(threads, summaryLength) {
 
 function groupByCategory(threads) {
   return threads.reduce((acc, thread) => {
-    const category = thread.category || 'primary';
+    const category = thread.category || 'other';
     if (!acc[category]) {
       acc[category] = [];
     }
