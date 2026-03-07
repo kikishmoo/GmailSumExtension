@@ -10,10 +10,25 @@ const MESSAGE_TYPES = {
   SUMMARIZE_THREADS: 'SUMMARIZE_THREADS',
   EXTRACTED_THREADS: 'EXTRACTED_THREADS',
   GET_LATEST_SUMMARY: 'GET_LATEST_SUMMARY',
+  // Backward-compatible aliases used by older popup/content integrations.
+  LEGACY_SUMMARIZE_THREADS: 'SUMMARIZE',
+  LEGACY_GET_LATEST_SUMMARY: 'GET_SUMMARY',
 };
 
 function getSummaryStorageKey(accountId = 'default') {
   return `latestSummary:${accountId}`;
+}
+
+function getSummaryLookupKeys(accountId = 'default') {
+  const accountKey = getSummaryStorageKey(accountId);
+
+  // Maintain compatibility with earlier key formats used by in-flight branches.
+  const fallbackKeys = ['latestSummary'];
+  if (accountId === 'default') {
+    fallbackKeys.push('latestSummary:default');
+  }
+
+  return [accountKey, ...fallbackKeys];
 }
 
 function storageGet(keys) {
@@ -153,9 +168,16 @@ async function handleThreadSummaryMessage(message, sender) {
 
 async function getLatestSummary(message, sender) {
   const accountId = deriveAccountId(message, sender);
-  const storageKey = getSummaryStorageKey(accountId);
-  const stored = await storageGet([storageKey]);
-  return { ok: true, accountId, summary: stored[storageKey] ?? null };
+  const lookupKeys = getSummaryLookupKeys(accountId);
+  const stored = await storageGet(lookupKeys);
+
+  const matchedKey = lookupKeys.find((key) => stored[key]);
+  return {
+    ok: true,
+    accountId,
+    summary: matchedKey ? stored[matchedKey] : null,
+    storageKeyUsed: matchedKey ?? null,
+  };
 }
 
 chrome.runtime.onInstalled.addListener(() => {
@@ -168,7 +190,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return false;
   }
 
-  if (message?.type === MESSAGE_TYPES.SUMMARIZE_THREADS || message?.type === MESSAGE_TYPES.EXTRACTED_THREADS) {
+  if (
+    message?.type === MESSAGE_TYPES.SUMMARIZE_THREADS ||
+    message?.type === MESSAGE_TYPES.EXTRACTED_THREADS ||
+    message?.type === MESSAGE_TYPES.LEGACY_SUMMARIZE_THREADS
+  ) {
     handleThreadSummaryMessage(message, sender)
       .then((payload) => sendResponse(payload))
       .catch((error) => {
@@ -177,7 +203,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
-  if (message?.type === MESSAGE_TYPES.GET_LATEST_SUMMARY) {
+  if (
+    message?.type === MESSAGE_TYPES.GET_LATEST_SUMMARY ||
+    message?.type === MESSAGE_TYPES.LEGACY_GET_LATEST_SUMMARY
+  ) {
     getLatestSummary(message, sender)
       .then((payload) => sendResponse(payload))
       .catch((error) => sendResponse({ ok: false, error: error.message }));
