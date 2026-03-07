@@ -9,8 +9,37 @@
   <body>
     <main class="popup">
       <h1>Gmail Summary</h1>
-      <p id="status">Ready. Open Gmail to activate the content script.</p>
-      <button id="ping-button" type="button">Ping Background</button>
+
+      <section class="controls" aria-label="Summary settings">
+        <label for="categories">Categories</label>
+        <select id="categories" multiple size="5" aria-describedby="category-help">
+          <option value="primary">Primary</option>
+          <option value="work">Work</option>
+          <option value="promotions">Promotions</option>
+          <option value="social">Social</option>
+          <option value="finance">Finance</option>
+        </select>
+        <p id="category-help" class="help">Hold Ctrl/Cmd to select multiple categories.</p>
+
+        <div class="field-row">
+          <label for="max-threads">Max threads</label>
+          <input id="max-threads" type="number" min="1" max="50" step="1" />
+        </div>
+
+        <div class="field-row">
+          <label for="summary-length">Summary length</label>
+          <select id="summary-length">
+            <option value="short">Short</option>
+            <option value="medium">Medium</option>
+            <option value="long">Long</option>
+          </select>
+        </div>
+
+        <button id="summarize-button" type="button">Summarize unread</button>
+      </section>
+
+      <p id="status" role="status" aria-live="polite">Ready.</p>
+      <section id="summary-output" class="summary-output" hidden></section>
     </main>
     <script src="./popup.js"></script>
   </body>
