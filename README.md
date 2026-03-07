@@ -12,7 +12,8 @@ A starter Chrome Extension (Manifest V3) scaffold for Gmail integration.
     ├── content
     │   └── gmail.js
     ├── lib
-    │   └── README.md
+    │   ├── README.md
+    │   └── summarizer.js
     └── popup
         ├── index.html
         ├── popup.css
@@ -36,6 +37,28 @@ A starter Chrome Extension (Manifest V3) scaffold for Gmail integration.
 4. Click **Ping Background** in the popup.
 5. If connected correctly, the popup status updates to:
    - `Background service worker responded successfully.`
+
+## Test the summarizer logic
+
+Run the fixture-based unit tests:
+
+```bash
+npm test
+```
+
+## Manual QA checklist
+
+- [ ] Load the extension in Chrome via `chrome://extensions`.
+- [ ] Open Gmail with unread messages in the inbox.
+- [ ] Select one or more categories in the popup UI.
+- [ ] Run summarization from the extension popup.
+- [ ] Verify the summarized output text and Gmail thread links are correct.
+
+## Known limitations
+
+- Gmail DOM structure is volatile and can change without notice, which may break DOM selectors.
+- Account switching (multiple Gmail accounts) can change URL/session context and impact extraction reliability.
+- If an external summarization provider is enabled, API rate limits can throttle or block summary generation.
 
 ## Notes
 

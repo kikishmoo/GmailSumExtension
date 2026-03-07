@@ -1,0 +1,51 @@
+{
+  "input": [
+    {
+      "threadId": "a1",
+      "unread": true,
+      "category": "primary",
+      "subject": "Team update",
+      "snippet": "Daily standup summary",
+      "url": "https://mail.google.com/mail/u/0/#inbox/a1"
+    },
+    {
+      "threadId": "a2",
+      "unread": true,
+      "category": "promotions",
+      "subject": "Sale",
+      "snippet": "Big discount this weekend",
+      "url": "https://mail.google.com/mail/u/0/#inbox/a2"
+    },
+    {
+      "threadId": "a3",
+      "unread": true,
+      "category": "social",
+      "subject": "Event invite",
+      "snippet": "Let's catch up soon",
+      "url": "https://mail.google.com/mail/u/0/#inbox/a3"
+    }
+  ],
+  "options": {
+    "selectedCategories": ["primary", "social"]
+  },
+  "expected": {
+    "totalUnread": 2,
+    "selectedCategories": ["primary", "social"],
+    "items": [
+      {
+        "threadId": "a1",
+        "subject": "Team update",
+        "category": "primary",
+        "snippet": "Daily standup summary",
+        "url": "https://mail.google.com/mail/u/0/#inbox/a1"
+      },
+      {
+        "threadId": "a3",
+        "subject": "Event invite",
+        "category": "social",
+        "snippet": "Let's catch up soon",
+        "url": "https://mail.google.com/mail/u/0/#inbox/a3"
+      }
+    ]
+  }
+}
