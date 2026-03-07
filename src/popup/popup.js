@@ -1,5 +1,5 @@
 const DEFAULT_PREFERENCES = {
-  categories: ['primary', 'work'],
+  categories: ['business', 'ai', 'tech'],
   maxThreads: 8,
   summaryLength: 'medium',
 };
@@ -7,11 +7,25 @@ const DEFAULT_PREFERENCES = {
 const STORAGE_KEY = 'popupPreferences';
 const SUMMARY_LENGTHS = new Set(['short', 'medium', 'long']);
 const CATEGORY_LABELS = {
-  primary: 'Primary',
-  work: 'Work',
+  business: 'Business',
+  'side-hustles': 'Side hustles',
+  'remote-work': 'Remote work',
+  'passive-income': 'Passive income',
+  'online-income': 'Online income',
+  ai: 'AI',
+  tech: 'Tech',
+  science: 'Science',
+  coding: 'Coding',
+  programming: 'Programming',
+  parenting: 'Parenting',
+  pregnancy: 'Pregnancy',
+  fitness: 'Fitness',
+  coupons: 'Coupons',
+  'free-deals': 'Free deals',
+  finance: 'Finance',
   promotions: 'Promotions',
   social: 'Social',
-  finance: 'Finance',
+  other: 'Other',
 };
 
 const statusEl = document.getElementById('status');

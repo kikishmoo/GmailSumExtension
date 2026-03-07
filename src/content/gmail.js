@@ -62,23 +62,79 @@ function collectUnreadThreads({ categories, maxThreads }) {
 function inferCategory(text) {
   const normalized = text.toLowerCase();
 
-  if (/(invoice|payment|receipt|bank|transaction|statement)/.test(normalized)) {
-    return 'finance';
+  if (/(startup|founder|b2b|enterprise|revenue|pipeline|sales call|business)/.test(normalized)) {
+    return 'business';
   }
 
-  if (/(team|project|meeting|deadline|client|action item|review)/.test(normalized)) {
-    return 'work';
+  if (/(side hustle|freelance gig|moonlight|second income|etsy|shopify)/.test(normalized)) {
+    return 'side-hustles';
+  }
+
+  if (/(remote work|work from home|distributed team|async|timezone|virtual office)/.test(normalized)) {
+    return 'remote-work';
+  }
+
+  if (/(passive income|affiliate|dividend|royalty|automated income)/.test(normalized)) {
+    return 'passive-income';
+  }
+
+  if (/(online income|creator fund|monetize|youtube earnings|ad revenue|substack)/.test(normalized)) {
+    return 'online-income';
+  }
+
+  if (/(ai|artificial intelligence|llm|gpt|machine learning|neural)/.test(normalized)) {
+    return 'ai';
+  }
+
+  if (/(tech|technology|software release|product launch|saas|cloud)/.test(normalized)) {
+    return 'tech';
+  }
+
+  if (/(science|research|study|journal|experiment|peer review)/.test(normalized)) {
+    return 'science';
+  }
+
+  if (/(coding|debug|code review|github|pull request|javascript|typescript)/.test(normalized)) {
+    return 'coding';
+  }
+
+  if (/(programming|algorithm|api|sdk|framework|backend|frontend)/.test(normalized)) {
+    return 'programming';
+  }
+
+  if (/(parenting|toddler|childcare|kids|family routine|school update)/.test(normalized)) {
+    return 'parenting';
+  }
+
+  if (/(pregnancy|prenatal|trimester|obgyn|due date|baby registry)/.test(normalized)) {
+    return 'pregnancy';
+  }
+
+  if (/(fitness|workout|nutrition|gym|steps|training plan|wellness)/.test(normalized)) {
+    return 'fitness';
+  }
+
+  if (/(coupon|promo code|discount code|save \d+%|deal alert)/.test(normalized)) {
+    return 'coupons';
+  }
+
+  if (/(free deal|freebie|limited free|no cost|complimentary|giveaway)/.test(normalized)) {
+    return 'free-deals';
+  }
+
+  if (/(invoice|payment|receipt|bank|transaction|statement|billing)/.test(normalized)) {
+    return 'finance';
   }
 
   if (/(sale|offer|deal|discount|promo|shop|save now)/.test(normalized)) {
     return 'promotions';
   }
 
-  if (/(friend|social|invite|comment|mention|follow)/.test(normalized)) {
+  if (/(friend|social|invite|comment|mention|follow|network)/.test(normalized)) {
     return 'social';
   }
 
-  return 'primary';
+  return 'other';
 }
 
 function cleanText(value) {
