@@ -25,6 +25,19 @@ function setSummaryText(summary) {
   summaryOutput.textContent = lines.join('\n').trim();
 }
 
+function getActiveTabUrl() {
+  return new Promise((resolve) => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (chrome.runtime.lastError) {
+        resolve(null);
+        return;
+      }
+
+      resolve(tabs?.[0]?.url ?? null);
+    });
+  });
+}
+
 pingButton?.addEventListener('click', () => {
   chrome.runtime.sendMessage({ type: 'PING' }, (response) => {
     if (chrome.runtime.lastError) {
@@ -41,8 +54,10 @@ pingButton?.addEventListener('click', () => {
   });
 });
 
-loadSummaryButton?.addEventListener('click', () => {
-  chrome.runtime.sendMessage({ type: 'GET_LATEST_SUMMARY' }, (response) => {
+loadSummaryButton?.addEventListener('click', async () => {
+  const activeTabUrl = await getActiveTabUrl();
+
+  chrome.runtime.sendMessage({ type: 'GET_LATEST_SUMMARY', gmailUrl: activeTabUrl }, (response) => {
     if (chrome.runtime.lastError) {
       statusEl.textContent = `Error: ${chrome.runtime.lastError.message}`;
       return;

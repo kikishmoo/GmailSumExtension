@@ -65,6 +65,24 @@ function deriveAccountId(message = {}, sender = {}) {
     return String(message.payload.accountId);
   }
 
+  const explicitGmailUrl = message.gmailUrl ?? message.payload?.gmailUrl;
+  if (explicitGmailUrl) {
+    try {
+      const parsed = new URL(String(explicitGmailUrl));
+      const authUser = parsed.searchParams.get('authuser');
+      if (authUser) {
+        return `gmail:${authUser}`;
+      }
+
+      const userPathMatch = parsed.pathname.match(/\/u\/(\d+)\//);
+      if (userPathMatch) {
+        return `gmail:${userPathMatch[1]}`;
+      }
+    } catch (_error) {
+      // continue to sender URL fallback
+    }
+  }
+
   const senderUrl = sender?.url;
   if (!senderUrl) {
     return 'default';
