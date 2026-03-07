@@ -2,6 +2,16 @@ import { normalizeSummaryOutput } from '../summarizer.js';
 
 const OPENAI_URL = 'https://api.openai.com/v1/responses';
 
+function extractResponseText(payload = {}) {
+  if (typeof payload.output_text === 'string' && payload.output_text.trim()) {
+    return payload.output_text;
+  }
+
+  const contentItems = payload?.output?.flatMap((entry) => entry?.content ?? []) ?? [];
+  const firstText = contentItems.find((item) => typeof item?.text === 'string' && item.text.trim());
+  return firstText?.text ?? '';
+}
+
 export async function summarizeWithOpenAI({ apiKey, model = 'gpt-4o-mini', threads = [] } = {}) {
   if (!apiKey) {
     return null;
@@ -30,14 +40,14 @@ export async function summarizeWithOpenAI({ apiKey, model = 'gpt-4o-mini', threa
   }
 
   const payload = await response.json();
-  const rawText = payload?.output?.[0]?.content?.[0]?.text;
+  const rawText = extractResponseText(payload);
   if (!rawText) {
     return null;
   }
 
   try {
     const parsed = JSON.parse(rawText);
-    return normalizeSummaryOutput({ ...parsed, source: 'openai' }, threads.length);
+    return normalizeSummaryOutput(parsed, threads.length);
   } catch (_err) {
     return null;
   }

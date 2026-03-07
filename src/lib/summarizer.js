@@ -119,17 +119,16 @@ export function summarizeThreadsLocal(rawThreads = []) {
     actionItems: collectActionItems(normalizedThreads),
     threadsIncluded: normalizedThreads.length,
     groups: grouped,
-    source: 'local',
   };
 }
 
 export function normalizeSummaryOutput(summary = {}, fallbackThreadsCount = 0) {
+  const summaryText = String(summary.summaryText ?? '').trim();
+
   return {
-    summaryText: String(summary.summaryText ?? '').trim(),
+    summaryText: summaryText || '- ⚪ No threads available to summarize.',
     highPriority: Array.isArray(summary.highPriority) ? summary.highPriority : [],
     actionItems: Array.isArray(summary.actionItems) ? summary.actionItems : [],
     threadsIncluded: Number(summary.threadsIncluded ?? fallbackThreadsCount),
-    source: String(summary.source ?? 'local'),
-    groups: summary.groups ?? { byCategory: {}, bySender: {} },
   };
 }

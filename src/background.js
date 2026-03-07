@@ -40,7 +40,55 @@ function storageSet(value) {
   });
 }
 
-async function summarizeWithProvider({ threads, accountId }) {
+function extractThreadsFromMessage(message = {}) {
+  if (Array.isArray(message.threads)) {
+    return message.threads;
+  }
+
+  if (Array.isArray(message.payload?.threads)) {
+    return message.payload.threads;
+  }
+
+  if (Array.isArray(message.data?.threads)) {
+    return message.data.threads;
+  }
+
+  return [];
+}
+
+function deriveAccountId(message = {}, sender = {}) {
+  if (message.accountId) {
+    return String(message.accountId);
+  }
+
+  if (message.payload?.accountId) {
+    return String(message.payload.accountId);
+  }
+
+  const senderUrl = sender?.url;
+  if (!senderUrl) {
+    return 'default';
+  }
+
+  try {
+    const parsed = new URL(senderUrl);
+    const authUser = parsed.searchParams.get('authuser');
+    if (authUser) {
+      return `gmail:${authUser}`;
+    }
+
+    const userPathMatch = parsed.pathname.match(/\/u\/(\d+)\//);
+    if (userPathMatch) {
+      return `gmail:${userPathMatch[1]}`;
+    }
+  } catch (_error) {
+    return 'default';
+  }
+
+  return 'default';
+}
+
+async function summarizeWithProvider(threads) {
   const config = await storageGet(['summarySettings']);
   const settings = config.summarySettings ?? {};
   const shouldUseExternal = FEATURE_FLAGS.enableExternalProvider && settings.useExternalProvider === true;
@@ -61,21 +109,20 @@ async function summarizeWithProvider({ threads, accountId }) {
     }
   }
 
-  const localSummary = summarizeThreadsLocal(threads);
-  return normalizeSummaryOutput(localSummary, threads.length);
+  return normalizeSummaryOutput(summarizeThreadsLocal(threads), threads.length);
 }
 
-async function handleThreadSummaryMessage(message) {
-  const threads = Array.isArray(message?.threads) ? message.threads : [];
-  const accountId = message?.accountId ?? 'default';
+async function handleThreadSummaryMessage(message, sender) {
+  const threads = extractThreadsFromMessage(message);
+  const accountId = deriveAccountId(message, sender);
 
-  const summary = await summarizeWithProvider({ threads, accountId });
+  const summary = await summarizeWithProvider(threads);
   const storageKey = getSummaryStorageKey(accountId);
   await storageSet({
     [storageKey]: {
-      ...summary,
       accountId,
       generatedAt: new Date().toISOString(),
+      ...summary,
     },
   });
 
@@ -83,7 +130,7 @@ async function handleThreadSummaryMessage(message) {
 }
 
 async function getLatestSummary(message) {
-  const accountId = message?.accountId ?? 'default';
+  const accountId = deriveAccountId(message);
   const storageKey = getSummaryStorageKey(accountId);
   const stored = await storageGet([storageKey]);
   return { ok: true, accountId, summary: stored[storageKey] ?? null };
@@ -100,7 +147,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   if (message?.type === MESSAGE_TYPES.SUMMARIZE_THREADS || message?.type === MESSAGE_TYPES.EXTRACTED_THREADS) {
-    handleThreadSummaryMessage(message)
+    handleThreadSummaryMessage(message, sender)
       .then((payload) => sendResponse(payload))
       .catch((error) => {
         sendResponse({ ok: false, error: error.message });

@@ -8,8 +8,8 @@ body {
 }
 
 .popup {
-  width: 280px;
-  min-height: 160px;
+  width: 320px;
+  min-height: 220px;
   padding: 16px;
   box-sizing: border-box;
 }
@@ -32,8 +32,19 @@ button {
   background: #1a73e8;
   color: #fff;
   cursor: pointer;
+  margin: 0 8px 10px 0;
 }
 
 button:hover {
   background: #1558b0;
+}
+
+#summary-output {
+  margin: 0;
+  padding: 8px;
+  border-radius: 6px;
+  background: rgba(127, 127, 127, 0.12);
+  white-space: pre-wrap;
+  font-size: 0.8rem;
+  line-height: 1.4;
 }
