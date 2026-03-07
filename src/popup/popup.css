@@ -63,6 +63,18 @@ button {
   font-size: 0.9rem;
 }
 
+#status[data-state="loading"] {
+  color: #1a73e8;
+}
+
+#status[data-state="success"] {
+  color: #188038;
+}
+
+#status[data-state="error"] {
+  color: #c5221f;
+}
+
 button {
   border: 0;
   border-radius: 6px;

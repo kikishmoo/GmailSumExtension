@@ -3,7 +3,7 @@
   "name": "Gmail Summary Extension",
   "version": "0.1.0",
   "description": "Chrome extension scaffold for Gmail summarization workflows.",
-  "permissions": ["storage", "activeTab", "scripting"],
+  "permissions": ["storage", "activeTab", "scripting", "tabs"],
   "host_permissions": ["https://mail.google.com/*"],
   "background": {
     "service_worker": "src/background.js"

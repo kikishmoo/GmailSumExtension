@@ -5,7 +5,7 @@ const DEFAULT_PREFERENCES = {
 };
 
 const STORAGE_KEY = 'popupPreferences';
-
+const SUMMARY_LENGTHS = new Set(['short', 'medium', 'long']);
 const CATEGORY_LABELS = {
   primary: 'Primary',
   work: 'Work',
@@ -35,7 +35,7 @@ async function initPopup() {
 
 async function runSummarizeFlow() {
   setLoadingState(true);
-  setStatus('Collecting unread Gmail threads...');
+  setStatus('loading', 'Collecting unread Gmail threads...');
   summaryOutputEl.hidden = true;
 
   try {
@@ -43,7 +43,6 @@ async function runSummarizeFlow() {
     await savePreferences(prefs);
 
     const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
-
     if (!activeTab?.id || !activeTab.url?.startsWith('https://mail.google.com/')) {
       throw new Error('Open Gmail in the active tab to summarize unread threads.');
     }
@@ -61,18 +60,17 @@ async function runSummarizeFlow() {
     }
 
     if (!Array.isArray(collectResponse.threads) || collectResponse.threads.length === 0) {
-      setStatus('No unread threads match your selected filters.');
+      setStatus('success', 'No unread threads match your selected filters.');
       renderEmptyState('Try broadening categories or increasing max threads.');
       return;
     }
 
-    setStatus(`Summarizing ${collectResponse.threads.length} thread(s)...`);
+    setStatus('loading', `Summarizing ${collectResponse.threads.length} thread(s)...`);
 
     const summarizeResponse = await chrome.runtime.sendMessage({
       type: 'SUMMARIZE_THREADS',
       payload: {
         summaryLength: prefs.summaryLength,
-        categories: prefs.categories,
         threads: collectResponse.threads,
       },
     });
@@ -81,103 +79,151 @@ async function runSummarizeFlow() {
       throw new Error(summarizeResponse?.error || 'Background summarization failed.');
     }
 
-    setStatus('Summary ready.');
+    setStatus('success', 'Summary ready.');
     renderSummary(summarizeResponse.summary);
   } catch (error) {
-    setStatus(`Error: ${error?.message || 'Unknown error.'}`);
+    const message = normalizeErrorMessage(error);
+    setStatus('error', `Error: ${message}`);
     renderEmptyState('Unable to generate a summary right now.');
   } finally {
     setLoadingState(false);
   }
 }
 
+function normalizeErrorMessage(error) {
+  if (!error?.message) {
+    return 'Unknown error.';
+  }
+
+  if (error.message.includes('Could not establish connection. Receiving end does not exist.')) {
+    return 'Gmail is open, but the page may still be loading. Wait a moment and try again.';
+  }
+
+  return error.message;
+}
+
 function renderSummary(summary) {
-  const { overview, categories } = summary;
+  summaryOutputEl.replaceChildren();
 
-  const categoryBlocks = categories
-    .map((categorySummary) => {
-      const items = categorySummary.items
-        .map((item) => {
-          if (item.threadUrl) {
-            return `<li>${escapeHtml(item.text)} <a href="${item.threadUrl}" target="_blank" rel="noopener noreferrer">Open</a></li>`;
-          }
+  const overviewSection = document.createElement('section');
+  overviewSection.className = 'overview';
 
-          return `<li>${escapeHtml(item.text)}</li>`;
-        })
-        .join('');
+  const overviewHeading = document.createElement('h2');
+  overviewHeading.textContent = 'Overview';
+  const overviewText = document.createElement('p');
+  overviewText.textContent = String(summary.overview || 'No overview available.');
+  overviewSection.append(overviewHeading, overviewText);
 
-      return `
-        <article class="category-summary">
-          <h3>${escapeHtml(CATEGORY_LABELS[categorySummary.category] || categorySummary.category)}</h3>
-          <ul>${items}</ul>
-        </article>
-      `;
-    })
-    .join('');
+  const categoryList = document.createElement('section');
+  categoryList.className = 'category-list';
 
-  summaryOutputEl.innerHTML = `
-    <section class="overview">
-      <h2>Overview</h2>
-      <p>${escapeHtml(overview)}</p>
-    </section>
-    <section class="category-list">
-      ${categoryBlocks}
-    </section>
-  `;
+  const categories = Array.isArray(summary.categories) ? summary.categories : [];
+  categories.forEach((categorySummary) => {
+    const article = document.createElement('article');
+    article.className = 'category-summary';
 
+    const heading = document.createElement('h3');
+    heading.textContent = CATEGORY_LABELS[categorySummary.category] || categorySummary.category || 'Other';
+
+    const list = document.createElement('ul');
+    const items = Array.isArray(categorySummary.items) ? categorySummary.items : [];
+
+    items.forEach((item) => {
+      const li = document.createElement('li');
+      li.append(document.createTextNode(String(item.text || '')));
+
+      if (item.threadUrl) {
+        const link = document.createElement('a');
+        link.href = String(item.threadUrl);
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = 'Open';
+        li.append(' ', link);
+      }
+
+      list.append(li);
+    });
+
+    article.append(heading, list);
+    categoryList.append(article);
+  });
+
+  summaryOutputEl.append(overviewSection, categoryList);
   summaryOutputEl.hidden = false;
 }
 
 function renderEmptyState(message) {
-  summaryOutputEl.innerHTML = `<p class="empty-state">${escapeHtml(message)}</p>`;
+  summaryOutputEl.replaceChildren();
+  const empty = document.createElement('p');
+  empty.className = 'empty-state';
+  empty.textContent = String(message || 'No results to display.');
+  summaryOutputEl.append(empty);
   summaryOutputEl.hidden = false;
 }
 
-function setStatus(text) {
+function setStatus(state, text) {
+  statusEl.dataset.state = state;
   statusEl.textContent = text;
 }
 
 function setLoadingState(isLoading) {
   summarizeButton.disabled = isLoading;
+  categoriesSelect.disabled = isLoading;
+  maxThreadsInput.disabled = isLoading;
+  summaryLengthSelect.disabled = isLoading;
   summarizeButton.textContent = isLoading ? 'Summarizing…' : 'Summarize unread';
 }
 
 function getPreferencesFromUI() {
   const selectedCategories = Array.from(categoriesSelect.selectedOptions).map((option) => option.value);
   const maxThreadsRaw = Number.parseInt(maxThreadsInput.value, 10);
+  const rawSummaryLength = summaryLengthSelect.value;
 
-  return {
+  return sanitizePreferences({
     categories: selectedCategories.length > 0 ? selectedCategories : [...DEFAULT_PREFERENCES.categories],
-    maxThreads: Number.isFinite(maxThreadsRaw)
-      ? Math.min(50, Math.max(1, maxThreadsRaw))
-      : DEFAULT_PREFERENCES.maxThreads,
-    summaryLength: summaryLengthSelect.value || DEFAULT_PREFERENCES.summaryLength,
-  };
+    maxThreads: maxThreadsRaw,
+    summaryLength: rawSummaryLength,
+  });
 }
 
 function applyPreferencesToUI(prefs) {
-  const categories = prefs.categories?.length ? prefs.categories : DEFAULT_PREFERENCES.categories;
+  const normalized = sanitizePreferences(prefs);
 
   Array.from(categoriesSelect.options).forEach((option) => {
-    option.selected = categories.includes(option.value);
+    option.selected = normalized.categories.includes(option.value);
   });
 
-  maxThreadsInput.value = String(prefs.maxThreads || DEFAULT_PREFERENCES.maxThreads);
-  summaryLengthSelect.value = prefs.summaryLength || DEFAULT_PREFERENCES.summaryLength;
+  maxThreadsInput.value = String(normalized.maxThreads);
+  summaryLengthSelect.value = normalized.summaryLength;
+}
+
+function sanitizePreferences(rawPrefs) {
+  const availableCategories = Array.from(categoriesSelect.options).map((option) => option.value);
+  const categories = Array.isArray(rawPrefs?.categories)
+    ? rawPrefs.categories.filter((category) => availableCategories.includes(category))
+    : [];
+  const summaryLength = SUMMARY_LENGTHS.has(rawPrefs?.summaryLength)
+    ? rawPrefs.summaryLength
+    : DEFAULT_PREFERENCES.summaryLength;
+  const maxThreads = Number.isFinite(rawPrefs?.maxThreads)
+    ? Math.min(50, Math.max(1, Math.round(rawPrefs.maxThreads)))
+    : DEFAULT_PREFERENCES.maxThreads;
+
+  return {
+    categories: categories.length > 0 ? categories : [...DEFAULT_PREFERENCES.categories],
+    maxThreads,
+    summaryLength,
+  };
 }
 
 async function persistPreferencesFromUI() {
-  const prefs = getPreferencesFromUI();
-  await savePreferences(prefs);
+  await savePreferences(getPreferencesFromUI());
 }
 
 async function loadPreferences() {
   try {
     const stored = await chrome.storage.sync.get(STORAGE_KEY);
-    return {
-      ...DEFAULT_PREFERENCES,
-      ...(stored?.[STORAGE_KEY] || {}),
-    };
+    return sanitizePreferences(stored?.[STORAGE_KEY] || DEFAULT_PREFERENCES);
   } catch (error) {
     console.warn('Failed to load preferences from sync storage.', error);
     return { ...DEFAULT_PREFERENCES };
@@ -185,14 +231,5 @@ async function loadPreferences() {
 }
 
 async function savePreferences(preferences) {
-  await chrome.storage.sync.set({ [STORAGE_KEY]: preferences });
-}
-
-function escapeHtml(value) {
-  return String(value)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;');
+  await chrome.storage.sync.set({ [STORAGE_KEY]: sanitizePreferences(preferences) });
 }
