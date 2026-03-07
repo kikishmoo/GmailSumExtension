@@ -1,0 +1,28 @@
+{
+  "input": [
+    {
+      "threadId": "l1",
+      "unread": true,
+      "category": "primary",
+      "subject": "Long message",
+      "snippet": "This is a very long snippet that should be truncated because the popup card has limited room and should not overflow in normal rendering conditions.",
+      "url": "https://mail.google.com/mail/u/0/#inbox/l1"
+    }
+  ],
+  "options": {
+    "maxSnippetLength": 48
+  },
+  "expected": {
+    "totalUnread": 1,
+    "selectedCategories": [],
+    "items": [
+      {
+        "threadId": "l1",
+        "subject": "Long message",
+        "category": "primary",
+        "snippet": "This is a very long snippet that should be trun\u2026",
+        "url": "https://mail.google.com/mail/u/0/#inbox/l1"
+      }
+    ]
+  }
+}

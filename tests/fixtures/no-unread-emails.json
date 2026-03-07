@@ -1,0 +1,20 @@
+{
+  "input": [
+    {
+      "threadId": "t1",
+      "unread": false,
+      "category": "primary",
+      "subject": "Read message",
+      "snippet": "Already read",
+      "url": "https://mail.google.com/mail/u/0/#inbox/t1"
+    }
+  ],
+  "options": {
+    "selectedCategories": ["primary"]
+  },
+  "expected": {
+    "totalUnread": 0,
+    "selectedCategories": ["primary"],
+    "items": []
+  }
+}

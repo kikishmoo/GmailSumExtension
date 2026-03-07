@@ -1,0 +1,49 @@
+{
+  "input": [
+    {
+      "threadId": "d1",
+      "unread": true,
+      "category": "primary",
+      "subject": "First copy",
+      "snippet": "Keep this",
+      "url": "https://mail.google.com/mail/u/0/#inbox/d1"
+    },
+    {
+      "threadId": "d1",
+      "unread": true,
+      "category": "primary",
+      "subject": "Duplicate copy",
+      "snippet": "Drop this",
+      "url": "https://mail.google.com/mail/u/0/#inbox/d1"
+    },
+    {
+      "threadId": "d2",
+      "unread": true,
+      "category": "social",
+      "subject": "Different thread",
+      "snippet": "Keep this too",
+      "url": "https://mail.google.com/mail/u/0/#inbox/d2"
+    }
+  ],
+  "options": {},
+  "expected": {
+    "totalUnread": 2,
+    "selectedCategories": [],
+    "items": [
+      {
+        "threadId": "d1",
+        "subject": "First copy",
+        "category": "primary",
+        "snippet": "Keep this",
+        "url": "https://mail.google.com/mail/u/0/#inbox/d1"
+      },
+      {
+        "threadId": "d2",
+        "subject": "Different thread",
+        "category": "social",
+        "snippet": "Keep this too",
+        "url": "https://mail.google.com/mail/u/0/#inbox/d2"
+      }
+    ]
+  }
+}
