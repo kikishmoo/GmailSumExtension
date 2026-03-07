@@ -65,6 +65,10 @@ function deriveAccountId(message = {}, sender = {}) {
     return String(message.payload.accountId);
   }
 
+  if (message.data?.accountId) {
+    return String(message.data.accountId);
+  }
+
   const explicitGmailUrl = message.gmailUrl ?? message.payload?.gmailUrl;
   if (explicitGmailUrl) {
     try {
@@ -147,8 +151,8 @@ async function handleThreadSummaryMessage(message, sender) {
   return { ok: true, accountId, summary };
 }
 
-async function getLatestSummary(message) {
-  const accountId = deriveAccountId(message);
+async function getLatestSummary(message, sender) {
+  const accountId = deriveAccountId(message, sender);
   const storageKey = getSummaryStorageKey(accountId);
   const stored = await storageGet([storageKey]);
   return { ok: true, accountId, summary: stored[storageKey] ?? null };
@@ -174,7 +178,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   if (message?.type === MESSAGE_TYPES.GET_LATEST_SUMMARY) {
-    getLatestSummary(message)
+    getLatestSummary(message, sender)
       .then((payload) => sendResponse(payload))
       .catch((error) => sendResponse({ ok: false, error: error.message }));
     return true;
