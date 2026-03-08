@@ -18,6 +18,11 @@ function normalizeCategories(rawCategories) {
   return categories.length > 0 ? [...new Set(categories)] : [...DEFAULT_SELECTED_CATEGORIES];
 }
 
+function normalizeThreadCategory(threadCategory, extractionCategory) {
+  const candidates = [threadCategory, extractionCategory, 'Primary'];
+  return candidates.find((value) => CATEGORY_ORDER.includes(value)) || 'Primary';
+}
+
 chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.sync.set({ selectedCategories: DEFAULT_SELECTED_CATEGORIES }, () => {
     if (chrome.runtime.lastError) {
@@ -85,7 +90,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         unread: true,
         threadId: thread?.threadUrl || `thread-${index}`,
         subject: thread?.subject || '',
-        category: latestUnreadExtraction?.category || 'Primary',
+        category: normalizeThreadCategory(thread?.category, latestUnreadExtraction?.category),
         snippet: thread?.snippet || '',
         url: thread?.threadUrl || ''
       }));
