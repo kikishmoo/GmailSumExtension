@@ -8,8 +8,8 @@ body {
 }
 
 .popup {
-  width: 320px;
-  min-height: 220px;
+  width: 360px;
+  min-height: 280px;
   padding: 16px;
   box-sizing: border-box;
 }
@@ -47,6 +47,12 @@ p {
   font-size: 0.86rem;
 }
 
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
 button {
   border: 0;
   border-radius: 6px;
@@ -58,4 +64,29 @@ button {
 
 button:hover {
   background: #1558b0;
+}
+
+.summary-section {
+  margin-top: 8px;
+}
+
+.summary-meta {
+  font-size: 0.82rem;
+  margin-bottom: 8px;
+}
+
+.summary-list {
+  margin: 0;
+  padding-left: 18px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.summary-list li {
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+}
+
+.summary-list a {
+  color: inherit;
 }

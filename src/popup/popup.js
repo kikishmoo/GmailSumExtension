@@ -1,6 +1,9 @@
 const statusEl = document.getElementById('status');
 const pingButton = document.getElementById('ping-button');
+const summarizeButton = document.getElementById('summarize-button');
 const categoriesForm = document.getElementById('categories-form');
+const summaryMetaEl = document.getElementById('summary-meta');
+const summaryListEl = document.getElementById('summary-list');
 
 const CATEGORY_ORDER = ['Primary', 'Social', 'Promotions', 'Updates', 'Forums'];
 
@@ -18,6 +21,45 @@ function sendMessage(message) {
 
       resolve(response);
     });
+  });
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function renderSummary(summary, extractedAt) {
+  if (!summaryListEl || !summaryMetaEl) {
+    return;
+  }
+
+  summaryListEl.innerHTML = '';
+
+  const timestamp = extractedAt ? new Date(extractedAt).toLocaleString() : 'unknown time';
+  summaryMetaEl.textContent = `${summary.totalUnread} unread thread(s) summarized. Last extract: ${timestamp}.`;
+
+  if (!summary.items.length) {
+    const empty = document.createElement('li');
+    empty.textContent = 'No unread threads matched the selected categories.';
+    summaryListEl.append(empty);
+    return;
+  }
+
+  summary.items.forEach((item) => {
+    const li = document.createElement('li');
+    const subject = escapeHtml(item.subject || '(no subject)');
+    const snippet = escapeHtml(item.snippet || '');
+
+    li.innerHTML = item.url
+      ? `<a href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer">${subject}</a><br><small>${snippet}</small>`
+      : `${subject}<br><small>${snippet}</small>`;
+
+    summaryListEl.append(li);
   });
 }
 
@@ -86,6 +128,24 @@ pingButton?.addEventListener('click', async () => {
     setStatus('No response from background service worker.');
   } catch (error) {
     setStatus(`Error: ${error.message}`);
+  }
+});
+
+summarizeButton?.addEventListener('click', async () => {
+  setStatus('Generating summary from latest unread extraction...');
+
+  try {
+    const response = await sendMessage({ type: 'SUMMARIZE_LATEST_EXTRACTION' });
+
+    if (!response?.ok) {
+      setStatus(`Unable to summarize: ${response?.error || 'Unknown error'}`);
+      return;
+    }
+
+    renderSummary(response.summary, response.extractedAt);
+    setStatus('Summary generated successfully.');
+  } catch (error) {
+    setStatus(`Unable to summarize: ${error.message}`);
   }
 });
 
