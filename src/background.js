@@ -2,6 +2,10 @@ const CATEGORY_ORDER = ['Primary', 'Social', 'Promotions', 'Updates', 'Forums'];
 const DEFAULT_SELECTED_CATEGORIES = [...CATEGORY_ORDER];
 let latestUnreadExtraction = null;
 
+if (typeof importScripts === 'function') {
+  importScripts('./lib/summarizer.js');
+}
+
 function normalizeCategories(rawCategories) {
   if (!Array.isArray(rawCategories)) {
     return [...DEFAULT_SELECTED_CATEGORIES];
@@ -70,6 +74,32 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message?.type === 'GET_LATEST_EXTRACTION') {
     sendResponse({ ok: true, payload: latestUnreadExtraction });
     return false;
+  }
+
+  if (message?.type === 'SUMMARIZE_LATEST_EXTRACTION') {
+    chrome.storage.sync.get({ selectedCategories: DEFAULT_SELECTED_CATEGORIES }, (result) => {
+      const selectedCategories = normalizeCategories(result.selectedCategories);
+      const rawThreads = Array.isArray(latestUnreadExtraction?.threads) ? latestUnreadExtraction.threads : [];
+
+      const threads = rawThreads.map((thread, index) => ({
+        unread: true,
+        threadId: thread?.threadUrl || `thread-${index}`,
+        subject: thread?.subject || '',
+        category: latestUnreadExtraction?.category || 'Primary',
+        snippet: thread?.snippet || '',
+        url: thread?.threadUrl || ''
+      }));
+
+      const summarize = globalThis.summarizeUnreadEmails;
+      if (typeof summarize !== 'function') {
+        sendResponse({ ok: false, error: 'Summarizer unavailable in background worker.' });
+        return;
+      }
+
+      const summary = summarize(threads, { selectedCategories });
+      sendResponse({ ok: true, summary, extractedAt: latestUnreadExtraction?.extractedAt || null });
+    });
+    return true;
   }
 
   return false;

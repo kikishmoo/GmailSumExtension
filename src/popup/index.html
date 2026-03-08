@@ -16,7 +16,16 @@
         <form id="categories-form"></form>
       </section>
 
-      <button id="ping-button" type="button">Ping Background</button>
+      <div class="actions">
+        <button id="summarize-button" type="button">Summarize Unread</button>
+        <button id="ping-button" type="button">Ping Background</button>
+      </div>
+
+      <section class="summary-section" aria-label="Summary output">
+        <h2>Latest summary</h2>
+        <p id="summary-meta" class="summary-meta">No summary generated yet.</p>
+        <ul id="summary-list" class="summary-list"></ul>
+      </section>
     </main>
     <script src="./popup.js"></script>
   </body>

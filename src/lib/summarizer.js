@@ -49,7 +49,14 @@ function summarizeUnreadEmails(threads, options = {}) {
   };
 }
 
-module.exports = {
-  summarizeUnreadEmails,
-  truncateSnippet,
-};
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    summarizeUnreadEmails,
+    truncateSnippet,
+  };
+}
+
+if (typeof globalThis !== 'undefined') {
+  globalThis.summarizeUnreadEmails = summarizeUnreadEmails;
+  globalThis.truncateSnippet = truncateSnippet;
+}
